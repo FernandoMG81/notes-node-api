@@ -4,6 +4,7 @@ const { app, server } = require('../index')
 
 const api = supertest(app)
 
+
 test('notes are returned as json', async () => {
   await api
     .get('/api/notes')
@@ -11,7 +12,8 @@ test('notes are returned as json', async () => {
     .expect('Content-Type', /application\/json/)
 })
 
-afterAll(() => {
-  mongoose.connection.close()
+
+afterAll(async () => {
+  await mongoose.connection.close()
   server.close()
 })
