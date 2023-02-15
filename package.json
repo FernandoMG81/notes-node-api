@@ -1,12 +1,13 @@
 {
-  "name": "05-node-practice",
+  "name": "notes-node-api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon index.js",
-    "test": "cross-env NODE_ENV=test jest --verbose --detectOpenHandles --forceExit",
-    "start": "cross-env NODE_ENV=production node index.js"
+    "start": "cross-env NODE_ENV=production node index.js",
+    "test": "cross-env NODE_ENV=test jest --verbose --detectOpenHandles",
+    "test:watch": "npm run test -- --watch"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +15,7 @@
   "devDependencies": {
     "jest": "29.4.2",
     "nodemon": "2.0.20",
-    "supertest": "^6.3.3"
+    "supertest": "6.3.3"
   },
   "dependencies": {
     "@sentry/node": "7.37.2",

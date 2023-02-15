@@ -1,3 +1,4 @@
+
 require('dotenv').config()
 require('./mongo')
 
@@ -5,11 +6,10 @@ const Sentry = require('@sentry/node')
 const Tracing = require('@sentry/tracing')
 const express = require('express')
 const app = express()
-const logger = require('./loggerMiddleware')
 const cors = require('cors')
 const Note = require('./models/Note')
-const notFound = require('./middleware/notFound')
-const handleErrors = require('./middleware/handleErrors')
+const notFound = require('./middleware/notFound.js')
+const handleErrors = require('./middleware/handleErrors.js')
 
 app.use(cors())
 app.use(express.json())
@@ -35,48 +35,62 @@ app.use(Sentry.Handlers.requestHandler())
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler())
 
-console.log(logger)
-
 app.get('/', (request, response) => {
-  response.send('<h1>Hello world</h1>')
+  console.log(request.ip)
+  console.log(request.ips)
+  console.log(request.originalUrl)
+  response.send('<h1>Hello World!</h1>')
 })
 
-app.get('/api/notes', (request, response) => {
-  Note.find({}).then(notes => {
-    response.json(notes)
-  })
+app.get('/api/notes', async (request, response) => {
+  const notes = await Note.find({})
+  response.json(notes)
 })
 
 app.get('/api/notes/:id', (request, response, next) => {
   const { id } = request.params
 
-  Note.findById(id).then(note => {
-    if (note) {
-      return response.json(note)
-    } else {
+  Note.findById(id)
+    .then(note => {
+      if (note) return response.json(note)
       response.status(404).end()
-    }
-  }).catch(err => {
-    next(err)
-  })
+    })
+    .catch(err => next(err))
 })
 
-app.delete('/api/notes/:id', (request, response, next) => {
+app.put('/api/notes/:id', (request, response, next) => {
   const { id } = request.params
+  const note = request.body
 
-  Note.findByIdAndRemove(id).then(result => {
-    response.status(204).end()
-  }).catch(err => next(err))
+  const newNoteInfo = {
+    content: note.content,
+    important: note.important
+  }
+
+  Note.findByIdAndUpdate(id, newNoteInfo, { new: true })
+    .then(result => {
+      response.json(result)
+    })
+    .catch(next)
+})
+
+app.delete('/api/notes/:id', async (request, response, next) => {
+  const { id } = request.params
+  // const note = await Note.findById(id)
+  // if (!note) return response.sendStatus(404)
+
+  const res = await Note.findByIdAndDelete(id)
+  if (res === null) return response.sendStatus(404)
 
   response.status(204).end()
 })
 
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', async (request, response, next) => {
   const note = request.body
 
-  if (!note || !note.content) {
+  if (!note.content) {
     return response.status(400).json({
-      error: 'require "content" field is missing'
+      error: 'required "content" field is missing'
     })
   }
 
@@ -86,29 +100,21 @@ app.post('/api/notes', (request, response) => {
     important: note.important || false
   })
 
-  newNote.save().then((savedNote) => {
+  // newNote.save().then(savedNote => {
+  //   response.json(savedNote)
+  // }).catch(err => next(err))
+
+  try {
+    const savedNote = await newNote.save()
     response.json(savedNote)
-  })
-})
-
-app.put('/api/notes/:id', (request, response) => {
-  const { id } = request.params
-  const note = request.body
-
-  const newNoteInfo = {
-    content: note.content,
-    important: note.important
+  } catch (error) {
+    next(error)
   }
-
-  Note.findByIdAndUpdate(id, newNoteInfo, { new: true }).then(result => {
-    response.json(result)
-  })
 })
 
 app.use(notFound)
-// The error handler must be before any other error middleware and after all controllers
-app.use(Sentry.Handlers.errorHandler())
 
+app.use(Sentry.Handlers.errorHandler())
 app.use(handleErrors)
 
 const PORT = process.env.PORT || 3001
