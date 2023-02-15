@@ -1,5 +1,5 @@
 require('dotenv').config()
-require('./mongo')
+const connectDB = require('./mongo')
 const express = require('express')
 const app = express()
 const logger = require('./loggerMiddleware')
@@ -111,8 +111,16 @@ app.use(Sentry.Handlers.errorHandler())
 app.use(handleErrors)
 
 const PORT = process.env.PORT
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+// let server = app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`)
+// })
+
+// Connect to the database before listening
+
+connectDB().then(() => {
+  const server = app.listen(PORT, () => {
+    console.log('listening for requests')
+  })
 })
 
-module.exports = { app, server }
+module.exports = { app }
