@@ -1,21 +1,22 @@
 const { app } = require('../index')
 const supertest = require('supertest')
+const User = require('../models/User')
 
 const api = supertest(app)
 
 const initialNotes = [
   {
-    content: 'Aprendiendo FullStack JS con midudev',
+    content: 'Aprendiendo FullStack JS',
     important: true,
     date: new Date()
   },
   {
-    content: 'Sígueme en https://midu.tube',
+    content: 'Aprendiendo node JS',
     important: true,
     date: new Date()
   },
   {
-    content: 'Gracias al chat por vuestra ayuda! :D',
+    content: 'Aprendiendo testing',
     important: true,
     date: new Date()
   }
@@ -29,8 +30,14 @@ const getAllContentFromNotes = async () => {
   }
 }
 
+const getUsers = async () => {
+  const usersDB = await User.find({})
+  return usersDB.map(user => user.toJSON())
+}
+
 module.exports = {
   api,
   initialNotes,
-  getAllContentFromNotes
+  getAllContentFromNotes,
+  getUsers
 }

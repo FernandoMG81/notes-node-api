@@ -6,7 +6,7 @@ const connectionString = NODE_ENV === 'test'
   ? MONGO_DB_URI_TEST
   : MONGO_DB_URI
 
-if(!connectionString){
+if (!connectionString) {
   console.error('Missing file .env on project')
 }
 
@@ -21,6 +21,7 @@ mongoose.connect(connectionString)
     console.error(err)
   })
 
-  process.on('uncaughtException', () => {
-    mongoose.connection.disconnect()
-  })
+process.on('uncaughtException', error => {
+  console.log(error)
+  mongoose.connection.close()
+})
